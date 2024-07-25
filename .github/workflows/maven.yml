@@ -20,5 +20,17 @@ jobs:
         java-version: '8'
         distribution: 'adopt'
         cache: maven
+    - name: Login To Huawei Cloud Docker Registry
+      uses: docker/login-action@v1
+      with:
+        registry: registry.cn-chengdu.aliyuncs.com
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASSWD }}
     - name: Build with Maven
       run: mvn -B package --file pom.xml
+    - name: Build Docker Backend Server Image
+      run: docker build -f Dockerfile . -t kkfliereview:local
+      timeout-minutes: 60
+    - name: Push Docker Image
+      run: docker tag kkfliereview:local registry.cn-chengdu.aliyuncs.com/dbsnolimit/kkfilereview:latest && docker push registry.cn-chengdu.aliyuncs.com/dbsnolimit/kkfilereview:latest
+      timeout-minutes: 10
