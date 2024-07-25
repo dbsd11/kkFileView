@@ -539,6 +539,12 @@ public class FileHandlerService implements InitializingBean {
                 attribute.setUsePasswordCache(true);
             }
             String kkProxyAuthorization = req.getHeader("kk-proxy-authorization");
+            if(!StringUtils.hasText(kkProxyAuthorization)) {
+                kkProxyAuthorization = req.getParameter("kkProxyAuthorization");
+                if(StringUtils.hasText(kkProxyAuthorization)) {
+                 kkProxyAuthorization = URLDecoder.decode(kkProxyAuthorization, uriEncoding);
+                }
+            }
             attribute.setKkProxyAuthorization(kkProxyAuthorization);
 
         }
