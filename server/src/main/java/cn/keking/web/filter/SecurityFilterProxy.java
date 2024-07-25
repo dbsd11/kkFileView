@@ -59,23 +59,29 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
             return;
         }
 
-        String token = request.getHeader(header);
-        if(token == null || token.isEmpty()) {
-            token = request.getParameter("token");
+        String requestUri = request.getRequestURI();
+        boolean needCheckLogin = requestUri.contains("onlinePreview") || requestUri.contains("picturesPreview") || requestUri.contains("getCorsFile") ||
+            requestUri.contains("addTask") || requestUri.contains("fileUpload") || requestUri.contains("deleteFile") || requestUri.contains("listFiles") || requestUri.contains("directory");
+            
+        if(needCheckLogin) {
+            String token = request.getHeader(header);
             if(token == null || token.isEmpty()) {
-                throw new ServletException("no token in header ");
+                token = request.getParameter("token");
+                if(token == null || token.isEmpty()) {
+                    throw new ServletException("no token in header ");
+                }
             }
-        }
-        token = token.replace("Bearer ", "");
+            token = token.replace("Bearer ", "");
 
-        Claims claims = Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
-        
-        String userKey = "login_tokens:" + String.valueOf(claims.get("login_user_key"));
-        if(!redissonClient.getBucket(userKey).isExists()) {
-            throw new ServletException("token illegal");
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secret)
+                    .parseClaimsJws(token)
+                    .getBody();
+            
+            String userKey = "login_tokens:" + String.valueOf(claims.get("login_user_key"));
+            if(!redissonClient.getBucket(userKey).isExists()) {
+                throw new ServletException("token illegal");
+            }
         }
 
         super.doFilter(request, response, filterChain);
