@@ -540,10 +540,15 @@ public class FileHandlerService implements InitializingBean {
             }
             String kkProxyAuthorization = req.getHeader("kk-proxy-authorization");
             if(!StringUtils.hasText(kkProxyAuthorization)) {
-                kkProxyAuthorization = req.getParameter("kkProxyAuthorization");
-                if(StringUtils.hasText(kkProxyAuthorization)) {
-                 kkProxyAuthorization = URLDecoder.decode(kkProxyAuthorization, uriEncoding);
+                try {
+                    kkProxyAuthorization = req.getParameter("kkProxyAuthorization");
+                    if(StringUtils.hasText(kkProxyAuthorization)) {
+                         kkProxyAuthorization = URLDecoder.decode(kkProxyAuthorization, uriEncoding);
+                    }
+                } catch(Exception e) {
+                    logger.error("failed parse kkProxyAuthorization from request param ：", e);
                 }
+                
             }
             attribute.setKkProxyAuthorization(kkProxyAuthorization);
 
