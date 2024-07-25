@@ -15,6 +15,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 import cn.keking.service.cache.CacheService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.InitializingBean;
 
 import org.redisson.Redisson;
