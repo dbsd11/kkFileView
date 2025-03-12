@@ -70,7 +70,7 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
 
         String requestUri = request.getRequestURI();
 
-        if(requestUri.contains("index.html")) {
+        if(requestUri.endsWith("index")) {
             String token = request.getParameter(header);
             if(token == null || token.isEmpty()) {
                 throw new ServletException("no token provided ");
@@ -109,7 +109,7 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
             if(token == null || token.isEmpty()) {
                 throw new ServletException("no token in header ");
             }
-            
+
             token = token.replace("Bearer ", "");
 
             Claims claims = Jwts.parser()
