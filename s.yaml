@@ -1,0 +1,75 @@
+edition: 1.0.0          #  命令行YAML规范版本，遵循语义化版本（Semantic Versioning）规范
+name: framework         #  项目名称
+# access 是当前应用所需要的密钥信息配置：
+# 密钥配置可以参考：https://www.serverless-devs.com/serverless-devs/command/config
+# 密钥使用顺序可以参考：https://www.serverless-devs.com/serverless-devs/tool#密钥使用顺序与规范
+access: "{{ access }}"
+
+vars:
+  region: "cn-chengdu" 
+  service_domain: ${env(service_domain)}
+  cert_id: ${env(cert_id)}
+
+services:
+  kkfileview: # 业务名称/模块名称
+    component:  fc    # 组件名称 https://docs.serverless-devs.com/user-guide/aliyun/fc/yaml/readme/
+    actions:          # 自定义执行逻辑
+      pre-deploy:
+        - run: set +e && echo "start deploy ${vars.service_domain} on $server.output.url.custom_domain[0].domain}"
+          path: "s.yaml"
+      post-deploy:  # 在deploy之后运行
+        - run: set +e && echo 'deploy success'
+          path: "s.yaml"
+    props: # 组件的属性值
+      region: ${vars.region}
+      service: 
+        name: "kkfileview"
+        description: 'kkfileview api server'
+        vpcConfig: auto
+        ossMountConfig: 
+          mountPoints: 
+            - bucketName: kkfileview-test
+              bucketPath: /files
+              endpoint: https://oss-cn-chengdu-internal.aliyuncs.com
+              mountDir: /mnt/kkfileview-files
+              readOnly: false
+      function:
+        name: "kkfileview-api"
+        description: 'kkfileview api'
+        version: 'LATEST'
+        codeUri: '.'
+        runtime: custom-container
+        timeout: 7200
+        caPort: 8012
+        environmentVariables:
+          FILE_PATH: /mnt/kkfileview-files
+        customContainerConfig: 
+          image: "registry.cn-chengdu.aliyuncs.com/dbsnolimit/kkfilereview:latest"
+        cpu: 0.5
+        memorySize: 512 # 单位MB
+        diskSize: 512 # 单位MB
+        instanceConcurrency: 200
+        logConfig:
+          project: 'serverless-log'
+          logstore: 'kkfileview'
+      customDomains:
+        - domainName: ${vars.service_domain}
+          protocol: HTTP
+          # certId: ${vars.cert_id}
+          routeConfigs:
+            - path: /*
+                serviceName: kkfileview
+                functionName: kkfileview-api
+                qualifier: LATEST
+      triggers:
+        - name: httpTrigger
+          type: http
+          config:
+            authType: anonymous
+            methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - HEAD
+              - OPTIONS

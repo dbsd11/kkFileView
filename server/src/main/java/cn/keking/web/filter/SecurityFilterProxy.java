@@ -22,8 +22,15 @@ import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.Cookie;
+
 @Configuration
 public class SecurityFilterProxy extends OncePerRequestFilter implements InitializingBean  {
+
+    private final Logger logger = LoggerFactory.getLogger(SecurityFilterProxy.class);
 
     // 令牌自定义标识
     @Value("${token.header}")
@@ -62,6 +69,24 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
         }
 
         String requestUri = request.getRequestURI();
+
+        if(requestUri.contains("index.html")) {
+            String token = request.getParameter(header);
+            if(token == null || token.isEmpty()) {
+                throw new ServletException("no token provided ");
+            }
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secret)
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            Cookie cookie = new Cookie(header, token);
+            cookie.setPath("/");
+            cookie.setMaxAge(-1);
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
+        }
+
         boolean needCheckLogin = requestUri.contains("onlinePreview") || requestUri.contains("picturesPreview") || requestUri.contains("getCorsFile") ||
             requestUri.contains("addTask") || requestUri.contains("fileUpload") || requestUri.contains("deleteFile") || requestUri.contains("listFiles") || requestUri.contains("directory");
             
@@ -70,9 +95,21 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
             if(token == null || token.isEmpty()) {
                 token = request.getParameter("token");
                 if(token == null || token.isEmpty()) {
-                    throw new ServletException("no token in header ");
+                    Cookie[] cookies = request.getCookies();
+                    if(cookies != null){
+                        for(Cookie cookie : cookies){
+                            if(cookie.getName().equalsIgnoreCase(header)){
+                                token = cookie.getValue();
+                            }
+                        }
+                    }
                 }
             }
+
+            if(token == null || token.isEmpty()) {
+                throw new ServletException("no token in header ");
+            }
+            
             token = token.replace("Bearer ", "");
 
             Claims claims = Jwts.parser()
@@ -84,6 +121,9 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
             if(redissonClient != null && !redissonClient.getBucket(userKey).isExists()) {
                 throw new ServletException("token illegal");
             }
+            logger.info("user {} access check {} success", claims.get("login_user_key"), requestUri);
+        } else {
+            logger.info("no need check access {}", requestUri);
         }
 
         super.doFilter(request, response, filterChain);
