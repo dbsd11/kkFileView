@@ -42,7 +42,7 @@
     </div>
     <div>
         <div style="font-size: 16px; text-align: center;">
-            <img width="400px" height="550px" alt="alipay" src="../images/alipay.jpeg"/> &nbsp;&nbsp;&nbsp;<img width="400px" height="550px" alt="wxpay" src="../images/wxpay.jpeg"/>
+            <img width="400px" height="550px" alt="alipay" src="../images/alipay.jpg"/> &nbsp;&nbsp;&nbsp;<img width="400px" height="550px" alt="wxpay" src="../images/wxpay.png"/>
         </div>
     </div>
     <div>
