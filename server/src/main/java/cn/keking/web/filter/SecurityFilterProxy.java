@@ -70,7 +70,7 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
 
         String requestUri = request.getRequestURI();
 
-        if(requestUri.endsWith("index")) {
+        if(requestUri.isEmpty() || requestUri.equalsIgnoreCase("/") || requestUri.endsWith("index")) {
             String token = request.getParameter(header);
             if(token == null || token.isEmpty()) {
                 throw new ServletException("no token provided ");
