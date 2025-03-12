@@ -12,8 +12,6 @@ import java.io.IOException;
 @Configuration
 public class SecurityFilterProxy extends OncePerRequestFilter {
 
-    private final Logger logger = LoggerFactory.getLogger(SecurityFilterProxy.class);
-
     private String NOT_ALLOW_METHODS = "TRACE";
 
     @Override
