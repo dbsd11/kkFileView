@@ -37,7 +37,7 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
     @Value("${token.expireTime}")
     private int expireTime;
 
-    @Autowired
+    @Autowired(required = false)
     private Config config;
 
     private String NOT_ALLOW_METHODS = "TRACE";
@@ -46,7 +46,9 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
 
     @Override
     public void afterPropertiesSet() throws ServletException {
-        this.redissonClient = Redisson.create(config);
+        if(config != null) {
+            this.redissonClient = Redisson.create(config);
+        }
     }
 
     @Override
@@ -79,7 +81,7 @@ public class SecurityFilterProxy extends OncePerRequestFilter implements Initial
                     .getBody();
             
             String userKey = "login_tokens:" + String.valueOf(claims.get("login_user_key"));
-            if(!redissonClient.getBucket(userKey).isExists()) {
+            if(redissonClient != null && !redissonClient.getBucket(userKey).isExists()) {
                 throw new ServletException("token illegal");
             }
         }
